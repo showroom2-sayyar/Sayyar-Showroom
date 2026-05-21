@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Showroom Price Catalogue</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#002B5C;--navy-dk:#001d3d;--navy-lt:#0a3d7a;
+  --gold:#C49A2A;--gold-lt:#E0B84A;--gold-bg:#FDFAF2;
+  --bg:#FFFFFF;--bg2:#F4F6F9;--bg3:#EAEDF2;--bg4:#DDE1EA;
+  --tx:#0D1B2A;--tx2:#3D5066;--tx3:#7A8FA6;
+  --bd:#DDE3EC;--bd2:#C2CBDA;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg2);color:var(--tx);min-height:100dvh;-webkit-font-smoothing:antialiased;}
+#app{max-width:960px;margin:0 auto;padding:0 12px;}
+@media(min-width:600px){
+  #app{padding:0 24px;}
+  #plist{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  #plist .chead{grid-column:1/-1;}
+  #plist .sbar{grid-column:1/-1;}
+  .pcard{margin-bottom:0;}
+  .modal{max-width:680px!important;}
+  .mimgwrap{height:280px!important;}
+}
+@media(min-width:900px){
+  #app{padding:0 32px;}
+  #plist{grid-template-columns:repeat(3,1fr);}
+}
+header{background:var(--navy);padding:16px 16px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,27,61,.25);}header>.htop,header>.filters{max-width:960px;margin:0 auto;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));}@media(min-width:600px){header>.htop,header>.filters{padding-left:24px;padding-right:24px;}}@media(min-width:900px){header>.htop,header>.filters{padding-left:32px;padding-right:32px;}}
+.htop{display:flex;align-items:center;gap:11px;margin-bottom:12px;}
+.logo{background:none;box-shadow:none;border-radius:0;width:72px;height:50px;padding:0;flex-shrink:0;display:flex;align-items:center;}
+.htitle{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:.4px;}
+.hsub{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:1.4px;text-transform:uppercase;margin-top:2px;font-weight:400;}
+.swrap{position:relative;margin-bottom:10px;}
+.sico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.5);pointer-events:none;}
+#search{width:100%;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--rs);color:#fff;font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px 9px 35px;outline:none;transition:all .2s;}
+#search:focus{border-color:var(--gold-lt);background:rgba(255,255,255,.15);}
+#search::placeholder{color:rgba(255,255,255,.45);}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;}
+.filters::-webkit-scrollbar{display:none;}
+.fbtn{flex-shrink:0;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:20px;color:rgba(255,255,255,.75);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;padding:5px 14px;cursor:pointer;white-space:nowrap;transition:all .18s;letter-spacing:.2px;}
+.fbtn.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600;}
+.sbar{padding:7px 16px;display:flex;align-items:center;font-size:11px;color:var(--tx3);background:var(--bg);border-bottom:1px solid var(--bd);letter-spacing:.1px;grid-column:1/-1;}
+.sbar b{color:var(--navy);font-weight:600;}
+#lupd{margin-left:auto;font-size:10px;color:var(--tx3);}
+.plist{padding:10px 12px 100px;}
+.chead{padding:14px 2px 6px;display:flex;align-items:center;gap:8px;grid-column:1/-1;}
+.clbl{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--navy);white-space:nowrap;letter-spacing:.3px;}
+.cline{flex:1;height:1px;background:var(--bd);}
+.ccnt{font-size:10px;color:var(--tx3);font-weight:500;}
+.pcard{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;overflow:hidden;cursor:pointer;display:flex;align-items:stretch;min-height:88px;box-shadow:0 1px 4px rgba(0,27,61,.06);transition:box-shadow .18s,border-color .18s;}
+.pcard:active{border-color:var(--bd2);box-shadow:0 2px 10px rgba(0,27,61,.1);}
+.cimg{width:82px;min-height:88px;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.cimg img{width:100%;height:100%;object-fit:cover;}
+.noimg{font-size:24px;opacity:.15;}
+.cbody{flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
+.ctop{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px;}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.si{background:#16A34A;}.so{background:#DC2626;}.sn{background:#94A3B8;}
+.ccode{font-size:9px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;font-weight:600;flex-shrink:0;margin-top:1px;}
+.dbadge{background:#FEF3C7;border:1px solid #FCD34D;border-radius:4px;font-size:9px;color:#92400E;font-weight:700;padding:1px 5px;margin-left:3px;flex-shrink:0;}
+.cdesc{font-size:12.5px;color:var(--tx);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:400;}
+.cbot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.bbadge{background:var(--bg3);border:1px solid var(--bd);border-radius:4px;font-size:9.5px;color:var(--tx2);padding:2px 8px;font-weight:500;}
+.pfinal{font-size:14px;font-weight:700;color:var(--navy);}
+.punit{font-size:9.5px;color:var(--tx3);}
+.moverlay{position:fixed;inset:0;background:rgba(0,15,40,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.moverlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);}
+.moverlay.open .modal{transform:translateY(0);}
+.mhandle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:14px auto 0;}
+.mimgwrap{margin:14px 18px 0;border-radius:10px;background:var(--bg3);height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--bd);}
+.mimgwrap img{width:100%;height:100%;object-fit:contain;padding:10px;}
+.noimg-lg{font-size:52px;opacity:.08;}
+.mbody{padding:16px 18px 10px;}
+.mcatrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.mcatbadge{background:rgba(0,43,92,.08);border:1px solid rgba(0,43,92,.15);border-radius:20px;font-size:10px;color:var(--navy);font-weight:600;padding:3px 11px;letter-spacing:.3px;}
+.mcode{font-size:10px;color:var(--tx3);letter-spacing:1.4px;text-transform:uppercase;font-weight:500;}
+.mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:14px;}
+.ptable{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:3px 14px;margin-bottom:14px;}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:13px;border-bottom:1px solid var(--bd);}
+.prow:last-child{border-bottom:none;}
+.plbl{color:var(--tx2);font-weight:400;}
+.pval{font-weight:500;color:var(--tx);}
+.pstrike{text-decoration:line-through;color:var(--tx3);font-weight:400;}
+.pdiscval{color:#B45309;font-weight:600;}
+.prow.pfrow{background:rgba(0,43,92,.04);border-radius:8px;margin:2px -4px;padding:10px 4px;}
+.prow.pfrow .plbl{color:var(--navy);font-weight:600;font-size:13.5px;}
+.prow.pfrow .pval{color:var(--navy);font-size:20px;font-weight:700;}
+.mmeta{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.mrow{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.mlbl{color:var(--tx3);width:80px;flex-shrink:0;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+.mval{color:var(--tx2);font-weight:400;}
+.schip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.chin{background:#DCFCE7;color:#15803D;border:1px solid #BBF7D0;}
+.chout{background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA;}
+.chna{background:var(--bg3);color:var(--tx3);border:1px solid var(--bd);}
+.imgbtn{display:block;width:100%;padding:11px;text-align:center;background:rgba(0,43,92,.05);border:1.5px solid rgba(0,43,92,.15);border-radius:var(--rs);color:var(--navy);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;margin-bottom:9px;}
+.closebtn{width:100%;padding:12px;background:var(--bg3);border:1.5px solid var(--bd2);border-radius:var(--rs);color:var(--tx2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:5px;}
+.vatnote{font-size:9.5px;color:var(--tx3);text-align:center;padding:5px 0;letter-spacing:.2px;}
+.fab{position:fixed;bottom:24px;right:18px;width:46px;height:46px;background:var(--navy);border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,27,61,.3);transition:transform .15s;z-index:50;}
+.fab:active{transform:scale(.92);}
+.loader{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:14px;color:var(--tx3);font-size:13px;}
+.spin{width:28px;height:28px;border:3px solid var(--bd2);border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.empty{display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:9px;color:var(--tx3);font-size:13px;text-align:center;}
+#dbg{display:none;background:#0d1117;color:#7ee787;font-size:10px;font-family:monospace;padding:10px;overflow-x:auto;max-height:200px;overflow-y:auto;white-space:pre;}
+/* Share button */
+.sharebtn{width:100%;padding:12px;background:var(--navy);border:none;border-radius:var(--rs);color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:9px;}
+/* Share card - off screen */
+#shareCard{position:fixed;left:-9999px;top:0;width:600px;background:#fff;font-family:'Inter',sans-serif;overflow:hidden;}
+.sc-header{background:#002B5C;padding:20px 24px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;}
+.sc-logo{width:110px;}
+.sc-headtitle{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-top:2px;}
+.sc-headsub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.5px;}
+.sc-body{display:flex;}
+.sc-img{width:220px;height:220px;background:#EAEDF2;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.sc-img img{width:100%;height:100%;object-fit:contain;padding:12px;}
+.sc-noimg{font-size:48px;opacity:.1;}
+.sc-info{flex:1;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px;}
+.sc-brand{font-size:11px;color:#7A8FA6;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.sc-desc{font-size:16px;font-weight:600;color:#0D1B2A;line-height:1.4;}
+.sc-divider{height:1px;background:#DDE3EC;}
+.sc-before{font-size:13px;color:#94A3B8;text-decoration:line-through;}
+.sc-after{font-size:13px;color:#3D5066;}
+.sc-vat{font-size:11px;color:#7A8FA6;}
+.sc-final-row{display:flex;align-items:baseline;gap:6px;margin-top:4px;}
+.sc-finallbl{font-size:11px;color:#7A8FA6;}
+.sc-finalval{font-size:26px;font-weight:800;color:#002B5C;}
+.sc-footer{background:#F4F6F9;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #DDE3EC;}
+.sc-footlbl{font-size:10px;color:#7A8FA6;}
+.sc-footval{font-size:10px;color:#002B5C;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div id="app">
+<header>
+  <div class="htop">
+    <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 113.39" style="width:72px;height:50px;"><style>.st0{fill:#fff;}</style><g><path class="st0" d="M41.03,68.44v10.35c0,4.33-1.98,6.2-6.27,6.2c-2.11,0-4.23-0.79-6.35-0.79c-1.08,0-1.62,0.59-1.62,1.67c0,1.09,0.29,2.22,0.64,3.25c1.23-1.38,2.16-1.82,4.04-1.82c2.37,0,4.73,0.4,7.1,0.4c1.97,0,3.78-0.65,5.17-2.02c1.72-1.73,1.87-4.24,1.87-6.66V64.1c-0.64,0.59-1.32,1.22-2.17,1.62C42.02,66.37,41.03,66.66,41.03,68.44z M72.39,61.79c-0.11,0.29-0.26,0.57-0.41,0.81c-0.23,0.37-0.42,0.65-0.35,1.06l0.28,1.55c0.09,0.5,0.38,0.6,0.79,0.36l1.3-0.76c0.4-0.23,0.7-0.6,0.72-1.13c0.2,0.37,0.56,0.4,0.95,0.17l1.3-0.75c0.42-0.24,0.65-0.63,0.55-1.14l-0.49-2.85c-0.13,0.39-0.25,0.63-0.36,0.79c-0.29,0.47-0.49,0.58-0.4,1.08l0.2,1.19l-1.34,0.78l-0.45-2.5c-0.11,0.39-0.24,0.61-0.37,0.81c-0.3,0.46-0.47,0.56-0.38,1.07l0.21,1.19l-1.33,0.77L72.39,61.79z M64.77,86.98c0,1.27,1.46,2.37,2.31,3.21l3.39-3.46l-3.33-3.28C66.17,84.43,64.77,85.46,64.77,86.98z M71.16,86.98c0,1.27,1.47,2.37,2.26,3.21l3.4-3.46l-3.28-3.27C72.57,84.43,71.16,85.46,71.16,86.98z M138.32,65.18v11.47h-9.84V64.03c-1.14,1.08-1.87,1.48-3.31,2.17c-0.88,0.39-1.27,1.23-1.27,2.17v8.28h-10.1v-9.42c-1.18,1.13-1.83,1.43-3.3,2.17c-0.89,0.39-1.29,1.23-1.29,2.17v5.09H77.21v-8.36c-1.13,1.09-1.88,1.48-3.3,2.17c-0.88,0.4-1.28,1.18-1.28,2.17v4.02H54.45V62.77c0-1.73-1.08-2.07-2.47-2.71c-0.78-0.39-1.48-0.98-2.11-1.62v19.51c0,2.46,1.12,3.29,3.49,3.29h20.34c1.62,0,2.95-0.59,3.5-2.22v2.22h33.08c1.62,0,2.95-0.59,3.5-2.22c0.54,1.63,1.91,2.22,3.54,2.22h7.59c1.62,0,3.01-0.59,3.55-2.22c0.54,1.63,1.91,2.22,3.54,2.22h7.39c2.37,0,3.54-0.84,3.54-3.29V60.84c-1.13,1.08-1.87,1.48-3.3,2.16C138.72,63.4,138.32,64.24,138.32,65.18z M58.84,45.39h0.2l1.46,1.88h2.09V35.98c0-7.53-3.55-8.79-7.32-8.79c-2.52,0-5.23,0.42-6.27,1.47c-1.05,1.04-1.05,2.29-1.05,3.76h1.88c0.62-2.72,2.3-3.55,4.6-3.55c2.52,0,4.4,2.02,4.4,7.87h-1.26c-5.65,0-10.67,0.49-10.67,5.09c0,4.61,3.77,5.86,6.06,5.86C56.12,47.69,58,46.45,58.84,45.39z M50.88,41.84c0-2.5,2.52-3.42,6.7-3.42h1.26v4.88c-0.84,1.25-1.88,2.51-3.98,2.51C52.77,45.81,50.88,44.55,50.88,41.84z M91.64,31.37l6.49,16.32l-0.84,2.3c-1.26,3.46-3.04,2.9-5.45,2.87c-0.9-0.16-1.8-0.3-2.7-0.3c-1.08,0-1.63,0.59-1.63,1.69c0,1.09,0.3,2.23,0.65,3.27c1.19-1.33,2.11-1.79,3.86-1.83c0-0.02,0.02-0.03,0.03-0.04h0.85c2.92,0,4.77-1.05,6.48-5.65l8.37-22.38h-2.09l-5.43,14.44l-4.61-11.5c-0.83-2.1-2.52-3.36-5.02-3.36h-3.55v0.84C89.13,28.24,90.8,29.29,91.64,31.37z M69.07,31.37l6.49,16.32l-0.84,2.3c-1.27,3.48-3.07,2.89-5.5,2.86c-0.89-0.16-1.79-0.3-2.7-0.3c-1.09,0-1.62,0.59-1.62,1.69c0,1.09,0.29,2.23,0.64,3.27c1.2-1.33,2.12-1.79,3.87-1.83c0.01-0.02,0.02-0.03,0.03-0.04h0.89c2.92,0,4.77-1.05,6.48-5.65l8.37-22.38h-2.09l-5.43,14.44l-4.61-11.5c-0.84-2.1-2.52-3.36-5.02-3.36h-3.56v0.84C66.56,28.24,68.24,29.29,69.07,31.37z M109.62,41.84c0,4.61,3.76,5.86,6.07,5.86c3.14,0,5.02-1.25,5.86-2.3h0.21l1.46,1.88h2.09V35.98c0-7.53-3.54-8.79-7.31-8.79c-2.52,0-5.23,0.42-6.27,1.47c-1.05,1.04-1.05,2.29-1.05,3.76h1.88c0.63-2.72,2.3-3.55,4.6-3.55c2.51,0,4.4,2.02,4.4,7.87h-1.25C114.64,36.74,109.62,37.23,109.62,41.84z M121.55,43.3c-0.84,1.25-1.89,2.51-3.98,2.51c-2.09,0-3.98-1.26-3.98-3.97c0-2.5,2.51-3.42,6.7-3.42h1.25V43.3z M130.53,32.63v14.64h3.77V31.79c0.83-1.25,2.3-2.09,3.98-2.09c1.46,0,2.71,0.41,3.34,1.25l1.67-1.25c-0.41-0.84-0.83-1.47-1.46-1.88c-0.64-0.42-1.67-0.63-2.51-0.63c-2.51,0-4.19,1.26-5.02,2.31h-0.21c-0.42-1.26-1.46-1.89-3.56-1.89h-3.34v0.89h0.41C130.11,28.5,130.53,30.12,130.53,32.63z M31.01,47.46c1.22,0,2.45,0.07,3.66,0.16c0.45,0.03,1.24,0.07,1.75,0.07c4.19,0,7.32-1.88,7.32-5.44c0-2.92-1.88-4.39-5.44-5.86l-2.51-1.05c-2.09-0.88-3.34-2.09-3.34-3.55c0-1.67,1.46-2.92,4.18-2.92c3.34,0,5.23,1.68,5.65,4.39h0.84c0-2.1,0-3.35-1.05-4.39c-1.05-1.05-3.14-1.68-6.28-1.68c-3.97,0-6.9,1.88-6.9,5.44c0,2.71,1.89,4.35,5.02,5.65l2.51,1.05c2.52,1.04,3.78,2.09,3.78,3.76c0,1.67-1.46,2.93-4.62,2.93c0,0-0.57,0-1.6-0.13c-1.92-0.26-3.82-1.23-5.73-1.23c-0.97,0-1.46,0.54-1.46,1.52c0,0.97,0.27,1.99,0.58,2.92C28.47,47.86,29.32,47.46,31.01,47.46z"/></g></svg></div>
+    <div>
+      <div class="htitle">SHOWROOM PRICE CATALOGUE</div>
+      <div class="hsub">Sanitaryware &amp; Tiles · All prices in BD</div>
+    </div>
+  </div>
+  <div class="swrap">
+    <svg class="sico" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="search" type="text" placeholder="Search by code, brand or description…" autocomplete="off"/>
+  </div>
+  <div class="filters" id="filters"></div>
+</header>
+
+<div class="sbar" id="sbar" style="display:none">
+  Showing <b id="rcnt">0</b>&nbsp;items
+  <span id="lupd"></span>
+</div>
+
+<!-- debug panel: tap logo 5× to show -->
+<div id="dbg"></div>
+
+<div id="plist" class="plist" style="padding:0;">
+  <div class="loader"><div class="spin"></div>Loading catalogue…</div>
+</div>
+
+<button class="fab" id="rfbtn" title="Refresh">
+  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+  </svg>
+</button>
+
+<div class="moverlay" id="moverlay">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mimgwrap" id="mimgwrap"><div class="noimg-lg">🛁</div></div>
+    <div class="mbody">
+      <div class="mcatrow">
+        <span class="mcatbadge" id="m-cat">—</span>
+        <span class="mcode" id="m-code"></span>
+      </div>
+      <div class="mtitle" id="m-title"></div>
+      <div class="ptable">
+        <div class="prow"><span class="plbl">Price before discount</span><span class="pstrike" id="m-before">—</span></div>
+        <div class="prow"><span class="plbl">Discount</span><span class="pdiscval" id="m-disc">—</span></div>
+        <div class="prow"><span class="plbl">Price after discount</span><span class="pval" id="m-after">—</span></div>
+        <div class="prow"><span class="plbl">VAT (10%)</span><span class="pval" id="m-vat">—</span></div>
+        <div class="prow pfrow"><span class="plbl">Final price (incl. VAT)</span><span class="pval" id="m-final">—</span></div>
+      </div>
+      <div class="mmeta">
+        <div class="mrow"><span class="mlbl">Brand</span><span class="mval" id="m-brand">—</span></div>
+        <div class="mrow"><span class="mlbl">Unit</span><span class="mval" id="m-unit">—</span></div>
+        <div class="mrow"><span class="mlbl">Location</span><span class="mval" id="m-loc">—</span></div>
+        <div class="mrow"><span class="mlbl">Stock</span><span id="m-stock"></span></div>
+      </div>
+      <a id="m-imglink" class="imgbtn" target="_blank" rel="noopener" style="display:none">🔗 View full product image</a>
+            <button class="sharebtn" id="sharebtn" onclick="generateShareCard()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+        Share on WhatsApp
+      </button>
+<button class="closebtn" id="closebtn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        Close
+      </button>
+      <div class="vatnote">All prices in Bahraini Dinar (BD) · VAT 10% included in final price</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTI8YtK2GUz1I27bhuSZ-yvAtXUypTq0tcMOfOLAJ7-43nQAYFlRxVQR1PloGVofY1TE27hrBmRLlkA/pub?gid=1757867568&single=true&output=csv';
+
+const VALID_CATS = ['sanitaryware', 'tiles'];
+let ALL = [], FIL = [], ACTIVE = 'All';
+
+/* ── DEBUG ─────────────────────────────────────────────────────────────── */
+let logoTaps = 0;
+document.querySelector('.logo')?.addEventListener('click', () => {
+  if (++logoTaps >= 5) { document.getElementById('dbg').style.display = 'block'; logoTaps = 0; }
+});
+function dbg(msg) {
+  const el = document.getElementById('dbg');
+  el.textContent += msg + '\n';
+  console.log(msg);
+}
+
+/* ── CSV PARSER ─────────────────────────────────────────────────────────── */
+function splitRow(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { q = !q; continue; }
+    if (c === ',' && !q) { out.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+/* Find the header row — contains a cell with "item" AND "code" together */
+function findHeader(lines) {
+  for (let i = 0; i < Math.min(lines.length, 15); i++) {
+    const cells = splitRow(lines[i]);
+    for (const c of cells) {
+      if (/item/i.test(c) && /code/i.test(c)) return i;
+    }
+  }
+  return -1;
+}
+
+/* Find best matching column index */
+function best(headers, ...pats) {
+  for (const pat of pats) {
+    const re = new RegExp(pat, 'i');
+    const idx = headers.findIndex(h => re.test(h));
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function toNum(v) {
+  if (v === undefined || v === null || v === '') return 0;
+  const s = String(v).replace(/[^\d.\-]/g, '');
+  const f = parseFloat(s);
+  return isNaN(f) ? 0 : f;
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').map(l => l.replace(/\r$/, ''));
+  const hRow = findHeader(lines);
+  if (hRow < 0) throw new Error('Cannot find header row. Make sure "Item Code" column exists.');
+
+  const raw = splitRow(lines[hRow]);
+  dbg('Header row index: ' + hRow);
+  dbg('Headers: ' + JSON.stringify(raw));
+
+  // ── Column index map ─────────────────────────────────────────────────────
+  // We try MANY patterns for each field to handle any variation
+  const C = {
+    code:   best(raw, 'item\\s*code'),
+    cat:    best(raw, 'categor'),
+    brand:  best(raw, '^brand$', 'brand'),
+    desc:   best(raw, 'descrip'),
+    img:    best(raw, 'image', 'link', 'url'),
+    unit:   best(raw, '^unit$', '\\bunit\\b'),
+    // PRICES — try every reasonable variation
+    before: best(raw, 'price\\s*before', 'before\\s*discount', 'price\\s*b[ef]'),
+    disc:   best(raw, 'discount\\s*%', '^discount$', 'disc.*%', '%.*disc'),
+    after:  best(raw, 'price\\s*after', 'after\\s*discount', 'price\\s*aft'),
+    vat:    best(raw, 'vat\\s*amount', 'vat\\s*\\(', '^vat', 'vat.*bd'),
+    final:  best(raw, 'final\\s*price', 'final.*incl', 'incl.*vat', 'final.*vat'),
+    stock:  best(raw, 'stock\\s*status', 'stock'),
+    loc:    best(raw, 'location', 'aisle'),
+    notes:  best(raw, 'notes'),
+  };
+  dbg('Column map: ' + JSON.stringify(C));
+
+  // Safety: if column not found by name, try by known position from your sheet
+  // Your sheet order: Item Code(0) | Category(1) | Brand(2) | Description(3) |
+  //   Image URL(4) | Unit(5) | Price Before(6) | Discount%(7) | Price After(8) |
+  //   VAT Amount(9) | Final Price(10) | Stock Status(11) | Location(12) | Notes(13)
+  const POS = { code:0, cat:1, brand:2, desc:3, img:4, unit:5, before:6, disc:7, after:8, vat:9, final:10, stock:11, loc:12, notes:13 };
+  for (const key of Object.keys(C)) {
+    if (C[key] === -1) {
+      C[key] = POS[key]; // fall back to positional
+      dbg(`WARN: '${key}' not found by name → using positional col ${POS[key]}`);
+    }
+  }
+
+  const get = (row, idx) => (idx >= 0 && idx < row.length) ? row[idx] : '';
+
+  const products = [];
+  for (let i = hRow + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue;
+
+    const row = splitRow(line);
+    const cat  = get(row, C.cat).trim();
+    const code = get(row, C.code).trim();
+    const desc = get(row, C.desc).trim();
+
+    // Must be a valid category
+    if (!VALID_CATS.includes(cat.toLowerCase())) continue;
+    if (!code && !desc) continue;
+
+    const p = {
+      code, cat, brand: get(row, C.brand),
+      desc, img: get(row, C.img), unit: get(row, C.unit),
+      before: toNum(get(row, C.before)),
+      disc:   toNum(get(row, C.disc)),
+      after:  toNum(get(row, C.after)),
+      vat:    toNum(get(row, C.vat)),
+      final:  toNum(get(row, C.final)),
+      stock:  get(row, C.stock),
+      loc:    get(row, C.loc),
+      notes:  get(row, C.notes),
+    };
+
+    // If after/vat/final are missing but before+disc are present → calculate
+    if (p.before > 0 && p.disc > 0 && p.after === 0) {
+      p.after = p.before * (1 - p.disc / 100);
+    }
+    if (p.after > 0 && p.vat === 0) {
+      p.vat = p.after * 0.10;
+    }
+    if (p.after > 0 && p.final === 0) {
+      p.final = p.after + p.vat;
+    }
+    // If only before exists and disc = 0
+    if (p.before > 0 && p.disc === 0 && p.final === 0) {
+      p.vat   = p.before * 0.10;
+      p.final = p.before + p.vat;
+      p.after = p.before;
+    }
+
+    dbg(`ROW ${i}: code=${p.code} before=${p.before} disc=${p.disc} after=${p.after} vat=${p.vat} final=${p.final}`);
+    products.push(p);
+  }
+  dbg(`Total products loaded: ${products.length}`);
+  return products;
+}
+
+/* ── DRIVE THUMBNAIL ─────────────────────────────────────────────────────── */
+function thumb(url, sz) {
+  if (!url) return '';
+  let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=s${sz}`;
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=s${sz}`;
+  if (/drive\.google\.com\/uc|lh3\.google/i.test(url)) return url;
+  return '';
+}
+
+/* ── FORMAT ──────────────────────────────────────────────────────────────── */
+function bd(n) { return n > 0 ? 'BD\u00A0' + n.toFixed(3) : '—'; }
+
+function sInfo(s) {
+  if (!s) return { cls:'chna', dot:'sn', lbl:'Unknown' };
+  const l = s.toLowerCase();
+  if (/in\s*stock|^in$/i.test(l))  return { cls:'chin',  dot:'si', lbl:'In Stock' };
+  if (/out|^out$/i.test(l))         return { cls:'chout', dot:'so', lbl:'Out of Stock' };
+  return { cls:'chna', dot:'sn', lbl: s };
+}
+
+/* ── FILTERS ─────────────────────────────────────────────────────────────── */
+function buildFilters() {
+  const cats = [...new Set(ALL.map(p => p.cat).filter(Boolean))];
+  const wrap = document.getElementById('filters');
+  wrap.innerHTML = '';
+  ['All', ...cats].forEach(f => {
+    const b = document.createElement('button');
+    b.className = 'fbtn' + (f === ACTIVE ? ' on' : '');
+    b.textContent = f === 'All' ? '✦ All'
+      : f.toLowerCase().includes('sanit') ? '🛁 ' + f
+      : '🏠 ' + f;
+    b.onclick = () => { ACTIVE = f; buildFilters(); doFilter(); };
+    wrap.appendChild(b);
+  });
+}
+
+function doFilter() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  FIL = ALL.filter(p => {
+    const mc = ACTIVE === 'All' || p.cat.toLowerCase() === ACTIVE.toLowerCase();
+    const mq = !q || [p.code, p.brand, p.desc, p.loc].some(v => (v||'').toLowerCase().includes(q));
+    return mc && mq;
+  });
+  render();
+}
+
+/* ── RENDER ──────────────────────────────────────────────────────────────── */
+function render() {
+  document.getElementById('rcnt').textContent = FIL.length;
+  document.getElementById('sbar').style.display = 'flex';
+  const list = document.getElementById('plist');
+  if (!FIL.length) {
+    list.innerHTML = '<div class="empty"><div style="font-size:32px;opacity:.2">🔍</div>No products found.</div>';
+    return;
+  }
+  const groups = {};
+  FIL.forEach(p => { if (!groups[p.cat]) groups[p.cat]=[]; groups[p.cat].push(p); });
+  let html = '';
+  for (const [cat, items] of Object.entries(groups)) {
+    const icon = /sanit/i.test(cat) ? '🛁' : '🏠';
+    html += `<div class="chead">
+      <span class="clbl">${icon} ${cat}</span>
+      <div class="cline"></div><span class="ccnt">${items.length}</span>
+    </div>`;
+    items.forEach(p => {
+      const gi = ALL.indexOf(p);
+      const si = sInfo(p.stock);
+      const disc = p.disc ? `<span class="dbadge">-${p.disc}%</span>` : '';
+      const t = thumb(p.img, 160);
+      html += `<div class="pcard" onclick="openModal(${gi})">
+        <div class="cimg" id="ci${gi}">${t ? `<div class="spin" style="width:20px;height:20px;border-width:2px"></div>` : `<div class="noimg">🛁</div>`}</div>
+        <div class="cbody">
+          <div>
+            <div class="ctop">
+              <div class="sdot ${si.dot}"></div>
+              <span class="ccode">${p.code||'—'}</span>${disc}
+            </div>
+            <div class="cdesc">${p.desc||'—'}</div>
+          </div>
+          <div class="cbot">
+            <span class="bbadge">${p.brand||'—'}</span>
+            <div><span class="pfinal">${p.final>0?bd(p.final):'—'}</span>${p.unit?`<span class="punit">/${p.unit}</span>`:''}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+  list.innerHTML = html;
+  ALL.forEach((p, gi) => {
+    const wrap = document.getElementById('ci'+gi);
+    if (!wrap) return;
+    const t = thumb(p.img, 160);
+    if (!t) return;
+    const img = new Image();
+    img.onload  = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
+    img.onerror = () => { wrap.innerHTML = '<div class="noimg">🛁</div>'; };
+    img.src = t;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+  });
+}
+
+/* ── MODAL ───────────────────────────────────────────────────────────────── */
+function openModal(gi) {
+  const p = ALL[gi];
+  if (!p) return;
+  _currentProduct = p;
+  const t = thumb(p.img, 600);
+  // Start pre-fetching image as base64 immediately so it's ready when Share is tapped
+  if (t) prefetchImage(t);
+  const si = sInfo(p.stock);
+  document.getElementById('m-cat').textContent    = p.cat || '—';
+  document.getElementById('m-code').textContent   = p.code || '';
+  document.getElementById('m-title').textContent  = p.desc || '—';
+  document.getElementById('m-before').textContent = bd(p.before);
+  document.getElementById('m-disc').textContent   = p.disc > 0 ? p.disc + '%' : '0%';
+  document.getElementById('m-after').textContent  = bd(p.after);
+  document.getElementById('m-vat').textContent    = bd(p.vat);
+  document.getElementById('m-final').textContent  = bd(p.final);
+  document.getElementById('m-brand').textContent  = p.brand || '—';
+  document.getElementById('m-unit').textContent   = p.unit  || '—';
+  document.getElementById('m-loc').textContent    = p.loc   || '—';
+  document.getElementById('m-stock').innerHTML    = `<span class="schip ${si.cls}">${si.lbl}</span>`;
+  const wrap = document.getElementById('mimgwrap');
+  if (t) {
+    wrap.innerHTML = '<div class="spin"></div>';
+    const img = new Image();
+    img.onload  = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
+    img.onerror = () => { wrap.innerHTML = '<div class="noimg-lg">🛁</div>'; };
+    img.src = t;
+    img.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:10px;';
+    const lk = document.getElementById('m-imglink');
+    lk.style.display = 'block'; lk.href = p.img;
+  } else {
+    wrap.innerHTML = '<div class="noimg-lg">🛁</div>';
+    document.getElementById('m-imglink').style.display = 'none';
+  }
+  document.getElementById('moverlay').classList.add('open');
+}
+document.getElementById('moverlay').addEventListener('click', e => { if (e.target.id==='moverlay') closeModal(); });
+document.getElementById('closebtn').addEventListener('click', closeModal);
+function closeModal() { document.getElementById('moverlay').classList.remove('open'); }
+
+/* ── FETCH ───────────────────────────────────────────────────────────────── */
+async function load() {
+  document.getElementById('plist').innerHTML = '<div class="loader"><div class="spin"></div>Loading catalogue…</div>';
+  document.getElementById('sbar').style.display = 'none';
+  document.getElementById('dbg').textContent = '';
+  try {
+    const r = await fetch(CSV + '&t=' + Date.now());
+    if (!r.ok) throw new Error('Network error ' + r.status);
+    const text = await r.text();
+    ALL = parseCSV(text);
+    if (!ALL.length) throw new Error('No products found. Check Category column has "Sanitaryware" or "Tiles".');
+    buildFilters();
+    FIL = [...ALL];
+    render();
+    document.getElementById('lupd').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('plist').innerHTML =
+      `<div class="empty">
+        <div style="font-size:28px;opacity:.2">⚠️</div>
+        <div>${e.message}</div>
+        <button onclick="load()" style="margin-top:8px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Retry</button>
+      </div>`;
+  }
+}
+
+document.getElementById('search').addEventListener('input', doFilter);
+document.getElementById('rfbtn').addEventListener('click', load);
+load();
+</script>
+
+</div><!-- /#app -->
+<div id="shareCard">
+  <div class="sc-header">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 113.39" style="width:72px;height:50px;"><style>.scs{fill:#fff;}</style><g><path class="scs" d="M41.03,68.44v10.35c0,4.33-1.98,6.2-6.27,6.2c-2.11,0-4.23-0.79-6.35-0.79c-1.08,0-1.62,0.59-1.62,1.67c0,1.09,0.29,2.22,0.64,3.25c1.23-1.38,2.16-1.82,4.04-1.82c2.37,0,4.73,0.4,7.1,0.4c1.97,0,3.78-0.65,5.17-2.02c1.72-1.73,1.87-4.24,1.87-6.66V64.1c-0.64,0.59-1.32,1.22-2.17,1.62C42.02,66.37,41.03,66.66,41.03,68.44z M72.39,61.79c-0.11,0.29-0.26,0.57-0.41,0.81c-0.23,0.37-0.42,0.65-0.35,1.06l0.28,1.55c0.09,0.5,0.38,0.6,0.79,0.36l1.3-0.76c0.4-0.23,0.7-0.6,0.72-1.13c0.2,0.37,0.56,0.4,0.95,0.17l1.3-0.75c0.42-0.24,0.65-0.63,0.55-1.14l-0.49-2.85c-0.13,0.39-0.25,0.63-0.36,0.79c-0.29,0.47-0.49,0.58-0.4,1.08l0.2,1.19l-1.34,0.78l-0.45-2.5c-0.11,0.39-0.24,0.61-0.37,0.81c-0.3,0.46-0.47,0.56-0.38,1.07l0.21,1.19l-1.33,0.77L72.39,61.79z M64.77,86.98c0,1.27,1.46,2.37,2.31,3.21l3.39-3.46l-3.33-3.28C66.17,84.43,64.77,85.46,64.77,86.98z M71.16,86.98c0,1.27,1.47,2.37,2.26,3.21l3.4-3.46l-3.28-3.27C72.57,84.43,71.16,85.46,71.16,86.98z M138.32,65.18v11.47h-9.84V64.03c-1.14,1.08-1.87,1.48-3.31,2.17c-0.88,0.39-1.27,1.23-1.27,2.17v8.28h-10.1v-9.42c-1.18,1.13-1.83,1.43-3.3,2.17c-0.89,0.39-1.29,1.23-1.29,2.17v5.09H77.21v-8.36c-1.13,1.09-1.88,1.48-3.3,2.17c-0.88,0.4-1.28,1.18-1.28,2.17v4.02H54.45V62.77c0-1.73-1.08-2.07-2.47-2.71c-0.78-0.39-1.48-0.98-2.11-1.62v19.51c0,2.46,1.12,3.29,3.49,3.29h20.34c1.62,0,2.95-0.59,3.5-2.22v2.22h33.08c1.62,0,2.95-0.59,3.5-2.22c0.54,1.63,1.91,2.22,3.54,2.22h7.59c1.62,0,3.01-0.59,3.55-2.22c0.54,1.63,1.91,2.22,3.54,2.22h7.39c2.37,0,3.54-0.84,3.54-3.29V60.84c-1.13,1.08-1.87,1.48-3.3,2.16C138.72,63.4,138.32,64.24,138.32,65.18z M58.84,45.39h0.2l1.46,1.88h2.09V35.98c0-7.53-3.55-8.79-7.32-8.79c-2.52,0-5.23,0.42-6.27,1.47c-1.05,1.04-1.05,2.29-1.05,3.76h1.88c0.62-2.72,2.3-3.55,4.6-3.55c2.52,0,4.4,2.02,4.4,7.87h-1.26c-5.65,0-10.67,0.49-10.67,5.09c0,4.61,3.77,5.86,6.06,5.86C56.12,47.69,58,46.45,58.84,45.39z M50.88,41.84c0-2.5,2.52-3.42,6.7-3.42h1.26v4.88c-0.84,1.25-1.88,2.51-3.98,2.51C52.77,45.81,50.88,44.55,50.88,41.84z M91.64,31.37l6.49,16.32l-0.84,2.3c-1.26,3.46-3.04,2.9-5.45,2.87c-0.9-0.16-1.8-0.3-2.7-0.3c-1.08,0-1.63,0.59-1.63,1.69c0,1.09,0.3,2.23,0.65,3.27c1.19-1.33,2.11-1.79,3.86-1.83c0-0.02,0.02-0.03,0.03-0.04h0.85c2.92,0,4.77-1.05,6.48-5.65l8.37-22.38h-2.09l-5.43,14.44l-4.61-11.5c-0.83-2.1-2.52-3.36-5.02-3.36h-3.55v0.84C89.13,28.24,90.8,29.29,91.64,31.37z M69.07,31.37l6.49,16.32l-0.84,2.3c-1.27,3.48-3.07,2.89-5.5,2.86c-0.89-0.16-1.79-0.3-2.7-0.3c-1.09,0-1.62,0.59-1.62,1.69c0,1.09,0.29,2.23,0.64,3.27c1.2-1.33,2.12-1.79,3.87-1.83c0.01-0.02,0.02-0.03,0.03-0.04h0.89c2.92,0,4.77-1.05,6.48-5.65l8.37-22.38h-2.09l-5.43,14.44l-4.61-11.5c-0.84-2.1-2.52-3.36-5.02-3.36h-3.56v0.84C66.56,28.24,68.24,29.29,69.07,31.37z M109.62,41.84c0,4.61,3.76,5.86,6.07,5.86c3.14,0,5.02-1.25,5.86-2.3h0.21l1.46,1.88h2.09V35.98c0-7.53-3.54-8.79-7.31-8.79c-2.52,0-5.23,0.42-6.27,1.47c-1.05,1.04-1.05,2.29-1.05,3.76h1.88c0.63-2.72,2.3-3.55,4.6-3.55c2.51,0,4.4,2.02,4.4,7.87h-1.25C114.64,36.74,109.62,37.23,109.62,41.84z M121.55,43.3c-0.84,1.25-1.89,2.51-3.98,2.51c-2.09,0-3.98-1.26-3.98-3.97c0-2.5,2.51-3.42,6.7-3.42h1.25V43.3z M130.53,32.63v14.64h3.77V31.79c0.83-1.25,2.3-2.09,3.98-2.09c1.46,0,2.71,0.41,3.34,1.25l1.67-1.25c-0.41-0.84-0.83-1.47-1.46-1.88c-0.64-0.42-1.67-0.63-2.51-0.63c-2.51,0-4.19,1.26-5.02,2.31h-0.21c-0.42-1.26-1.46-1.89-3.56-1.89h-3.34v0.89h0.41C130.11,28.5,130.53,30.12,130.53,32.63z M31.01,47.46c1.22,0,2.45,0.07,3.66,0.16c0.45,0.03,1.24,0.07,1.75,0.07c4.19,0,7.32-1.88,7.32-5.44c0-2.92-1.88-4.39-5.44-5.86l-2.51-1.05c-2.09-0.88-3.34-2.09-3.34-3.55c0-1.67,1.46-2.92,4.18-2.92c3.34,0,5.23,1.68,5.65,4.39h0.84c0-2.1,0-3.35-1.05-4.39c-1.05-1.05-3.14-1.68-6.28-1.68c-3.97,0-6.9,1.88-6.9,5.44c0,2.71,1.89,4.35,5.02,5.65l2.51,1.05c2.52,1.04,3.78,2.09,3.78,3.76c0,1.67-1.46,2.93-4.62,2.93c0,0-0.57,0-1.6-0.13c-1.92-0.26-3.82-1.23-5.73-1.23c-0.97,0-1.46,0.54-1.46,1.52c0,0.97,0.27,1.99,0.58,2.92C28.47,47.86,29.32,47.46,31.01,47.46z"/></g></svg>
+    <div class="sc-headtitle">Sanitaryware &amp; Tiles</div>
+    <div class="sc-headsub">Product Details</div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-img" id="sc-img"><div class="sc-noimg">🛁</div></div>
+    <div class="sc-info">
+      <div class="sc-brand" id="sc-brand"></div>
+      <div class="sc-desc" id="sc-desc">—</div>
+      <div class="sc-divider"></div>
+      <div class="sc-before" id="sc-before"></div>
+      <div class="sc-after" id="sc-after"></div>
+      <div class="sc-vat" id="sc-vat"></div>
+      <div class="sc-final-row">
+        <div class="sc-finallbl">Final Price (incl. VAT)</div>
+        <div class="sc-finalval" id="sc-final">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="sc-footer">
+    <span class="sc-footlbl">All prices in Bahraini Dinar (BD) · VAT 10% included</span>
+    <span class="sc-footval">Sayyar Showroom</span>
+  </div>
+</div>
+
+<script>
+let _currentProduct = null;
+// Cache: maps image URL → base64 data URL
+const _imgCache = {};
+
+// Pre-fetch image as base64 when modal opens — called from openModal
+async function prefetchImage(url) {
+  if (!url || _imgCache[url]) return;
+  _imgCache[url] = 'loading';
+  const proxies = [
+    'https://corsproxy.io/?' + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://thingproxy.freeboard.io/fetch/' + url,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const r = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) continue;
+      const blob = await r.blob();
+      const b64 = await new Promise(res => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.readAsDataURL(blob);
+      });
+      _imgCache[url] = b64;
+      return;
+    } catch(e) { /* try next */ }
+  }
+  _imgCache[url] = 'failed';
+}
+
+async function generateShareCard() {
+  const p = _currentProduct;
+  if (!p) return;
+  const btn = document.getElementById('sharebtn');
+  btn.disabled = true;
+
+  // Wait for image prefetch to fully complete
+  const imgUrl = thumb(p.img, 600);
+  if (imgUrl) {
+    btn.textContent = '⏳ Loading image…';
+    if (!_imgCache[imgUrl]) await prefetchImage(imgUrl);
+    let waited = 0;
+    while (_imgCache[imgUrl] === 'loading' && waited < 12000) {
+      await new Promise(r => setTimeout(r, 300));
+      waited += 300;
+    }
+  }
+  btn.textContent = '⏳ Preparing…';
+
+  // Populate #shareCard fields
+  const cached = imgUrl ? _imgCache[imgUrl] : null;
+  const scImg = document.getElementById('sc-img');
+  if (cached && cached !== 'failed' && cached !== 'loading') {
+    await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        scImg.innerHTML = '';
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:12px;display:block;';
+        scImg.appendChild(img);
+        resolve();
+      };
+      img.onerror = () => { scImg.innerHTML = '<div class="sc-noimg">🛁</div>'; resolve(); };
+      img.src = cached;
+    });
+  } else {
+    scImg.innerHTML = '<div class="sc-noimg">🛁</div>';
+  }
+  document.getElementById('sc-brand').textContent = (p.brand || '').toUpperCase();
+  document.getElementById('sc-desc').textContent  = p.desc || '—';
+  document.getElementById('sc-before').textContent = p.before > 0 ? 'Was: ' + bd(p.before) : '';
+  document.getElementById('sc-after').textContent  = p.disc > 0 ? 'After discount: ' + bd(p.after) : '';
+  document.getElementById('sc-vat').textContent    = p.vat > 0 ? '+ VAT: ' + bd(p.vat) : '';
+  document.getElementById('sc-final').textContent  = bd(p.final);
+
+  // Move card on-screen temporarily for html2canvas
+  const card = document.getElementById('shareCard');
+  card.style.left = '-9999px';
+  card.style.top  = '0';
+
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+
+    card.style.left = '-9999px'; // keep hidden
+
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'sayyar-' + (p.code||'product') + '.jpg', {type:'image/jpeg'});
+      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+        navigator.share({
+          files: [file],
+          title: 'Sayyar Showroom',
+          text: (p.desc||'') + '\nFinal Price: ' + bd(p.final)
+        }).catch(()=>{});
+      } else {
+        // Fallback: download
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg', 0.92);
+        a.download = 'sayyar-' + (p.code||'product') + '.jpg';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+      btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg> Share on WhatsApp';
+      btn.disabled = false;
+    }, 'image/jpeg', 0.92);
+
+  } catch(e) {
+    btn.innerHTML = 'Share on WhatsApp';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
