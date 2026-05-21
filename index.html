@@ -297,13 +297,37 @@ function parseCSV(text) {
   const hRow = findHeader(lines);
   if (hRow < 0) throw new Error('Cannot find header row. Make sure "Item Code" column exists.');
 
-  const raw = splitRow(lines[hRow]);
+  // Read header row — pad to at least 20 cols so sparse sheets work
+  let raw = splitRow(lines[hRow]);
+  while (raw.length < 20) raw.push('');
+
+  // Also scan next 3 rows for any cell containing "technical drawing"
+  // (handles merged header rows where the label is on a different row)
+  for (let si = hRow + 1; si <= hRow + 3 && si < lines.length; si++) {
+    const scanRow = splitRow(lines[si]);
+    scanRow.forEach((cell, idx) => {
+      if (/technical.*draw|draw.*tech/i.test(cell) && !raw[idx]) {
+        raw[idx] = cell;
+      }
+    });
+  }
+
+  // Also scan the row BEFORE header
+  if (hRow > 0) {
+    const prevRow = splitRow(lines[hRow - 1]);
+    prevRow.forEach((cell, idx) => {
+      if (/technical.*draw|draw.*tech/i.test(cell) && !raw[idx]) {
+        raw[idx] = cell;
+      }
+    });
+  }
+
   dbg('Header row index: ' + hRow);
   dbg('Headers: ' + JSON.stringify(raw));
   // Show header debug toast so we can see column names
   const _dbgDiv = document.getElementById('_hdr_debug');
   if (_dbgDiv) {
-    _dbgDiv.innerHTML = raw.map((h,i)=>`<b>Col ${i}:</b> ${h||'(empty)'}`).join('<br>');
+    _dbgDiv.innerHTML = raw.map((h,i)=>`<b>Col ${i}:</b> <span style='color:${h?"#7DF9AA":"rgba(255,255,255,.3)"}'>${h||'(empty)'}</span>`).join('<br>');
     _dbgDiv.style.display = 'block';
     setTimeout(()=>{ _dbgDiv.style.display='none'; }, 20000);
   }
