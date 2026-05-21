@@ -316,7 +316,7 @@ function parseCSV(text) {
     brand:  best(raw, '^brand$', 'brand'),
     desc:   best(raw, 'descrip'),
     img:    best(raw, 'image', 'link', 'url'),
-    drawing: best(raw, 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw', 'technical', 'draw', 'dwg', 'cad', 'spec', 'diagram'),
+    drawing: best(raw, 'technical drawing', 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw', 'technical', 'draw', 'dwg'),
     unit:   best(raw, '^unit$', '\\bunit\\b'),
     // PRICES — try every reasonable variation
     before: best(raw, 'price\\s*before', 'before\\s*discount', 'price\\s*b[ef]'),
@@ -329,6 +329,14 @@ function parseCSV(text) {
     notes:  best(raw, 'notes'),
   };
   dbg('Column map: ' + JSON.stringify(C));
+  // Show drawing column index in debug panel
+  const _dbgDiv2 = document.getElementById('_hdr_debug');
+  if (_dbgDiv2) {
+    const extra = document.createElement('div');
+    extra.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);';
+    extra.innerHTML = '<b>🎯 Drawing column detected at index: ' + (C.drawing ?? 'NOT FOUND') + '</b><br>Header name: "' + (raw[C.drawing] || raw[14] || '?') + '"';
+    _dbgDiv2.appendChild(extra);
+  }
 
   // Safety: if column not found by name, try by known position from your sheet
   // Your sheet order: Item Code(0) | Category(1) | Brand(2) | Description(3) |
@@ -360,7 +368,7 @@ function parseCSV(text) {
 
     const p = {
       code, cat, brand: get(row, C.brand),
-      desc, img: get(row, C.img), drawing: get(row, C.drawing), unit: get(row, C.unit),
+      desc, img: get(row, C.img), drawing: get(row, C.drawing) || get(row, 14), unit: get(row, C.unit),
       before: toNum(get(row, C.before)),
       disc:   toNum(get(row, C.disc)),
       after:  toNum(get(row, C.after)),
