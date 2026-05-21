@@ -300,6 +300,13 @@ function parseCSV(text) {
   const raw = splitRow(lines[hRow]);
   dbg('Header row index: ' + hRow);
   dbg('Headers: ' + JSON.stringify(raw));
+  // Show header debug toast so we can see column names
+  const _dbgDiv = document.getElementById('_hdr_debug');
+  if (_dbgDiv) {
+    _dbgDiv.innerHTML = raw.map((h,i)=>`<b>Col ${i}:</b> ${h||'(empty)'}`).join('<br>');
+    _dbgDiv.style.display = 'block';
+    setTimeout(()=>{ _dbgDiv.style.display='none'; }, 20000);
+  }
 
   // ── Column index map ─────────────────────────────────────────────────────
   // We try MANY patterns for each field to handle any variation
@@ -309,7 +316,7 @@ function parseCSV(text) {
     brand:  best(raw, '^brand$', 'brand'),
     desc:   best(raw, 'descrip'),
     img:    best(raw, 'image', 'link', 'url'),
-    drawing: best(raw, 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw'),
+    drawing: best(raw, 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw', 'technical', 'draw', 'dwg', 'cad', 'spec', 'diagram'),
     unit:   best(raw, '^unit$', '\\bunit\\b'),
     // PRICES — try every reasonable variation
     before: best(raw, 'price\\s*before', 'before\\s*discount', 'price\\s*b[ef]'),
@@ -813,5 +820,8 @@ async function generateShareCard() {
   }
 }
 </script>
+<div id="_hdr_debug" style="display:none;position:fixed;bottom:70px;left:10px;right:10px;background:#002B5C;color:#fff;font-size:11px;padding:12px 14px;border-radius:10px;z-index:9999;max-height:50vh;overflow-y:auto;line-height:1.8;box-shadow:0 4px 20px rgba(0,0,0,.4);">
+  <b style="font-size:13px;">📋 Sheet Column Headers (auto-closes in 20s)</b><br><br>
+</div>
 </body>
 </html>
