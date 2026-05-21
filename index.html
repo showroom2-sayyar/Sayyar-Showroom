@@ -414,12 +414,15 @@ function parseCSV(text) {
 
 /* ── DRIVE THUMBNAIL ─────────────────────────────────────────────────────── */
 function thumb(url, sz) {
-  if (!url) return '';
-  let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (!url || !url.trim()) return '';
+  const u = url.trim();
+  let m = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=s${sz}`;
-  m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  m = u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=s${sz}`;
-  if (/drive\.google\.com\/uc|lh3\.google/i.test(url)) return url;
+  if (/drive\.google\.com\/uc|lh3\.google/i.test(u)) return u;
+  // Fallback: return raw URL if it looks like any valid URL
+  if (/^https?:\/\//i.test(u)) return u;
   return '';
 }
 
@@ -535,7 +538,7 @@ function openModal(gi) {
 
   const productUrl  = thumb(p.img, 600);
   const drawingUrl  = thumb(p.drawing, 600);
-  const hasDrawing  = !!drawingUrl;
+  const hasDrawing  = !!(p.drawing && p.drawing.trim() && drawingUrl);
 
   // Pre-fetch product image for share
   if (productUrl) prefetchImage(productUrl);
