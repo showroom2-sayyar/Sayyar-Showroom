@@ -335,21 +335,21 @@ function parseCSV(text) {
   // ── Column index map ─────────────────────────────────────────────────────
   // We try MANY patterns for each field to handle any variation
   const C = {
-    code:   best(raw, 'item\\s*code'),
+    code:   best(raw, 'item.*code', 'item\\s*code'),
     cat:    best(raw, 'categor'),
     brand:  best(raw, '^brand$', 'brand'),
     desc:   best(raw, 'descrip'),
-    img:    best(raw, 'image', 'link', 'url'),
-    drawing: best(raw, 'technical drawing', 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw', 'technical', 'draw', 'dwg'),
+    img:    best(raw, 'image.*url', 'image.*link', 'url.*link', 'image', 'link', 'url'),
+    drawing: best(raw, 'technical.*drawing', 'technical drawing', 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw', 'technical', 'draw', 'dwg'),
     unit:   best(raw, '^unit$', '\\bunit\\b'),
     // PRICES — try every reasonable variation
-    before: best(raw, 'price\\s*before', 'before\\s*discount', 'price\\s*b[ef]'),
-    disc:   best(raw, 'discount\\s*%', '^discount$', 'disc.*%', '%.*disc'),
-    after:  best(raw, 'price\\s*after', 'after\\s*discount', 'price\\s*aft'),
-    vat:    best(raw, 'vat\\s*amount', 'vat\\s*\\(', '^vat', 'vat.*bd'),
-    final:  best(raw, 'final\\s*price', 'final.*incl', 'incl.*vat', 'final.*vat'),
-    stock:  best(raw, 'stock\\s*status', 'stock'),
-    loc:    best(raw, 'location', 'aisle'),
+    before: best(raw, 'price before discount', 'price.*before', 'before.*discount', 'price\\s*before', 'before\\s*discount'),
+    disc:   best(raw, 'discount\\s*%', 'discount %', '^discount$', 'disc.*%', '%.*disc'),
+    after:  best(raw, 'price after discount', 'price.*after.*discount', 'price.*after', 'after.*discount', 'price\\s*after', 'after\\s*discount'),
+    vat:    best(raw, 'vat amount', 'vat\\s*amount', 'vat\\s*\\(', '^vat', 'vat.*bd', 'vat'),
+    final:  best(raw, 'final price incl', 'final.*price.*incl', 'final.*price.*vat', 'final\\s*price', 'final.*incl', 'incl.*vat', 'final.*vat'),
+    stock:  best(raw, 'stock status', 'stock\\s*status', 'stock'),
+    loc:    best(raw, 'location.*aisle', 'location', 'aisle'),
     notes:  best(raw, 'notes'),
   };
   dbg('Column map: ' + JSON.stringify(C));
