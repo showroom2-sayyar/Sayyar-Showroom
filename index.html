@@ -74,9 +74,27 @@ header{background:var(--navy);padding:16px 16px 12px;position:sticky;top:0;z-ind
 .modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);}
 .moverlay.open .modal{transform:translateY(0);}
 .mhandle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:14px auto 0;}
-.mimgwrap{margin:14px 18px 0;border-radius:10px;background:var(--bg3);height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--bd);}
+.mimgwrap{margin:14px 18px 0;border-radius:10px;background:var(--bg3);height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--bd);position:relative;}
 .mimgwrap img{width:100%;height:100%;object-fit:contain;padding:10px;}
 .noimg-lg{font-size:52px;opacity:.08;}
+/* Slider */
+.img-slider{width:100%;height:100%;position:relative;overflow:hidden;border-radius:10px;}
+.img-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.4,0,.2,1);background:var(--bg3);}
+.img-slide img{width:100%;height:100%;object-fit:contain;padding:10px;}
+.slide-0{transform:translateX(0);}
+.slide-1{transform:translateX(100%);}
+.slider-active-0 .slide-0{transform:translateX(0);}
+.slider-active-0 .slide-1{transform:translateX(100%);}
+.slider-active-1 .slide-0{transform:translateX(-100%);}
+.slider-active-1 .slide-1{transform:translateX(0);}
+.slider-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;}
+.sdot-btn{width:7px;height:7px;border-radius:50%;background:rgba(0,43,92,.2);border:none;cursor:pointer;padding:0;transition:background .2s,transform .2s;}
+.sdot-btn.active{background:var(--navy);transform:scale(1.2);}
+.slide-arrow{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:28px;background:rgba(255,255,255,.85);border:1px solid var(--bd);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:background .15s;}
+.slide-arrow:hover{background:#fff;}
+.slide-arrow.prev{left:8px;}
+.slide-arrow.next{right:8px;}
+.slide-label{position:absolute;top:8px;right:8px;background:rgba(0,43,92,.7);color:#fff;font-size:9px;font-weight:600;letter-spacing:.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;z-index:10;}
 .mbody{padding:16px 18px 10px;}
 .mcatrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mcatbadge{background:rgba(0,43,92,.08);border:1px solid rgba(0,43,92,.15);border-radius:20px;font-size:10px;color:var(--navy);font-weight:600;padding:3px 11px;letter-spacing:.3px;}
@@ -177,7 +195,12 @@ header{background:var(--navy);padding:16px 16px 12px;position:sticky;top:0;z-ind
 <div class="moverlay" id="moverlay">
   <div class="modal">
     <div class="mhandle"></div>
-    <div class="mimgwrap" id="mimgwrap"><div class="noimg-lg">🛁</div></div>
+    <div class="mimgwrap" id="mimgwrap">
+      <div class="img-slider slider-active-0" id="imgSlider">
+        <div class="img-slide slide-0" id="slide-product"><div class="noimg-lg">🛁</div></div>
+        <div class="img-slide slide-1" id="slide-drawing"><div class="noimg-lg">📐</div></div>
+      </div>
+    </div>
     <div class="mbody">
       <div class="mcatrow">
         <span class="mcatbadge" id="m-cat">—</span>
@@ -286,6 +309,7 @@ function parseCSV(text) {
     brand:  best(raw, '^brand$', 'brand'),
     desc:   best(raw, 'descrip'),
     img:    best(raw, 'image', 'link', 'url'),
+    drawing: best(raw, 'technical.*draw', 'draw.*tech', 'drawing', 'tech.*draw'),
     unit:   best(raw, '^unit$', '\\bunit\\b'),
     // PRICES — try every reasonable variation
     before: best(raw, 'price\\s*before', 'before\\s*discount', 'price\\s*b[ef]'),
@@ -303,7 +327,7 @@ function parseCSV(text) {
   // Your sheet order: Item Code(0) | Category(1) | Brand(2) | Description(3) |
   //   Image URL(4) | Unit(5) | Price Before(6) | Discount%(7) | Price After(8) |
   //   VAT Amount(9) | Final Price(10) | Stock Status(11) | Location(12) | Notes(13)
-  const POS = { code:0, cat:1, brand:2, desc:3, img:4, unit:5, before:6, disc:7, after:8, vat:9, final:10, stock:11, loc:12, notes:13 };
+  const POS = { code:0, cat:1, brand:2, desc:3, img:4, unit:5, before:6, disc:7, after:8, vat:9, final:10, stock:11, loc:12, notes:13, drawing:14 };
   for (const key of Object.keys(C)) {
     if (C[key] === -1) {
       C[key] = POS[key]; // fall back to positional
@@ -329,7 +353,7 @@ function parseCSV(text) {
 
     const p = {
       code, cat, brand: get(row, C.brand),
-      desc, img: get(row, C.img), unit: get(row, C.unit),
+      desc, img: get(row, C.img), drawing: get(row, C.drawing), unit: get(row, C.unit),
       before: toNum(get(row, C.before)),
       disc:   toNum(get(row, C.disc)),
       after:  toNum(get(row, C.after)),
@@ -468,13 +492,101 @@ function render() {
 }
 
 /* ── MODAL ───────────────────────────────────────────────────────────────── */
+let _sliderIdx = 0;
+function setSlide(idx) {
+  _sliderIdx = idx;
+  const slider = document.getElementById('imgSlider');
+  if (!slider) return;
+  slider.className = 'img-slider slider-active-' + idx;
+  document.querySelectorAll('.sdot-btn').forEach((d,i) => d.classList.toggle('active', i===idx));
+  const lbl = document.getElementById('slideLabel');
+  if (lbl) lbl.textContent = idx === 0 ? 'Product' : 'Technical Drawing';
+}
+
 function openModal(gi) {
   const p = ALL[gi];
   if (!p) return;
   _currentProduct = p;
-  const t = thumb(p.img, 600);
-  // Start pre-fetching image as base64 immediately so it's ready when Share is tapped
-  if (t) prefetchImage(t);
+  _sliderIdx = 0;
+
+  const productUrl  = thumb(p.img, 600);
+  const drawingUrl  = thumb(p.drawing, 600);
+  const hasDrawing  = !!drawingUrl;
+
+  // Pre-fetch product image for share
+  if (productUrl) prefetchImage(productUrl);
+
+  // ── Build slider HTML ────────────────────────────────────────────────
+  const slider = document.getElementById('imgSlider');
+  slider.className = 'img-slider slider-active-0';
+
+  // Product slide
+  const slideP = document.getElementById('slide-product');
+  if (productUrl) {
+    slideP.innerHTML = '<div class="spin" style="width:20px;height:20px;border-width:2px"></div>';
+    const img = new Image();
+    img.onload  = () => { slideP.innerHTML = ''; img.style.cssText='width:100%;height:100%;object-fit:contain;padding:10px;'; slideP.appendChild(img); };
+    img.onerror = () => { slideP.innerHTML = '<div class="noimg-lg">🛁</div>'; };
+    img.src = productUrl;
+  } else {
+    slideP.innerHTML = '<div class="noimg-lg">🛁</div>';
+  }
+
+  // Drawing slide
+  const slideD = document.getElementById('slide-drawing');
+  if (drawingUrl) {
+    slideD.innerHTML = '<div class="spin" style="width:20px;height:20px;border-width:2px"></div>';
+    const img2 = new Image();
+    img2.onload  = () => { slideD.innerHTML = ''; img2.style.cssText='width:100%;height:100%;object-fit:contain;padding:10px;'; slideD.appendChild(img2); };
+    img2.onerror = () => { slideD.innerHTML = '<div class="noimg-lg">📐</div>'; };
+    img2.src = drawingUrl;
+  } else {
+    slideD.innerHTML = '<div class="noimg-lg">📐</div>';
+  }
+
+  // ── Navigation controls (rebuild each open) ──────────────────────────
+  const wrap = document.getElementById('mimgwrap');
+  // Remove old nav if any
+  wrap.querySelectorAll('.slide-arrow,.slider-dots,.slide-label').forEach(el=>el.remove());
+
+  if (hasDrawing) {
+    // Label
+    const lbl = document.createElement('div');
+    lbl.className='slide-label'; lbl.id='slideLabel'; lbl.textContent='Product';
+    wrap.appendChild(lbl);
+    // Dots
+    const dots = document.createElement('div');
+    dots.className='slider-dots';
+    [0,1].forEach(i => {
+      const d = document.createElement('button');
+      d.className='sdot-btn'+(i===0?' active':'');
+      d.title = i===0?'Product Image':'Technical Drawing';
+      d.onclick = () => setSlide(i);
+      dots.appendChild(d);
+    });
+    wrap.appendChild(dots);
+    // Arrows
+    const prev = document.createElement('button');
+    prev.className='slide-arrow prev';
+    prev.innerHTML='<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+    prev.onclick=()=>setSlide((_sliderIdx+1)%2);
+    const next = document.createElement('button');
+    next.className='slide-arrow next';
+    next.innerHTML='<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
+    next.onclick=()=>setSlide((_sliderIdx+1)%2);
+    wrap.appendChild(prev); wrap.appendChild(next);
+  }
+
+  // Touch/swipe support
+  let tx0=null;
+  slider.ontouchstart = e => { tx0=e.touches[0].clientX; };
+  slider.ontouchend   = e => {
+    if (tx0===null||!hasDrawing) return;
+    const dx = e.changedTouches[0].clientX - tx0;
+    if (Math.abs(dx)>40) setSlide(dx<0?1:0);
+    tx0=null;
+  };
+
   const si = sInfo(p.stock);
   document.getElementById('m-cat').textContent    = p.cat || '—';
   document.getElementById('m-code').textContent   = p.code || '';
@@ -488,20 +600,8 @@ function openModal(gi) {
   document.getElementById('m-unit').textContent   = p.unit  || '—';
   document.getElementById('m-loc').textContent    = p.loc   || '—';
   document.getElementById('m-stock').innerHTML    = `<span class="schip ${si.cls}">${si.lbl}</span>`;
-  const wrap = document.getElementById('mimgwrap');
-  if (t) {
-    wrap.innerHTML = '<div class="spin"></div>';
-    const img = new Image();
-    img.onload  = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
-    img.onerror = () => { wrap.innerHTML = '<div class="noimg-lg">🛁</div>'; };
-    img.src = t;
-    img.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:10px;';
-    const lk = document.getElementById('m-imglink');
-    lk.style.display = 'block'; lk.href = p.img;
-  } else {
-    wrap.innerHTML = '<div class="noimg-lg">🛁</div>';
-    document.getElementById('m-imglink').style.display = 'none';
-  }
+  const lk = document.getElementById('m-imglink');
+  if (productUrl) { lk.style.display='block'; lk.href=p.img; } else { lk.style.display='none'; }
   document.getElementById('moverlay').classList.add('open');
 }
 document.getElementById('moverlay').addEventListener('click', e => { if (e.target.id==='moverlay') closeModal(); });
@@ -578,13 +678,15 @@ async function prefetchImage(url) {
   const proxies = [
     'https://corsproxy.io/?' + encodeURIComponent(url),
     'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&url=' + encodeURIComponent(url),
     'https://thingproxy.freeboard.io/fetch/' + url,
   ];
   for (const proxy of proxies) {
     try {
-      const r = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+      const r = await fetch(proxy, {signal: AbortSignal.timeout(10000)});
       if (!r.ok) continue;
       const blob = await r.blob();
+      if (!blob.size) continue;
       const b64 = await new Promise(res => {
         const fr = new FileReader();
         fr.onload = () => res(fr.result);
@@ -594,7 +696,35 @@ async function prefetchImage(url) {
       return;
     } catch(e) { /* try next */ }
   }
+  // Last resort: try direct with crossOrigin (works if Google Drive allows)
+  try {
+    const b64 = await new Promise((res,rej) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        res(c.toDataURL('image/jpeg', 0.9));
+      };
+      img.onerror = rej;
+      img.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    });
+    _imgCache[url] = b64;
+    return;
+  } catch(e) {}
   _imgCache[url] = 'failed';
+}
+
+async function waitForCache(url, maxMs=15000) {
+  if (!url) return null;
+  if (!_imgCache[url]) await prefetchImage(url);
+  const t0 = Date.now();
+  while (_imgCache[url] === 'loading' && Date.now()-t0 < maxMs) {
+    await new Promise(r => setTimeout(r, 300));
+  }
+  const v = _imgCache[url];
+  return (v && v !== 'failed' && v !== 'loading') ? v : null;
 }
 
 async function generateShareCard() {
@@ -603,23 +733,17 @@ async function generateShareCard() {
   const btn = document.getElementById('sharebtn');
   btn.disabled = true;
 
-  // Wait for image prefetch to fully complete
   const imgUrl = thumb(p.img, 600);
   if (imgUrl) {
     btn.textContent = '⏳ Loading image…';
-    if (!_imgCache[imgUrl]) await prefetchImage(imgUrl);
-    let waited = 0;
-    while (_imgCache[imgUrl] === 'loading' && waited < 12000) {
-      await new Promise(r => setTimeout(r, 300));
-      waited += 300;
-    }
   }
+  btn.textContent = '⏳ Loading image…';
+  const cached = await waitForCache(imgUrl);
   btn.textContent = '⏳ Preparing…';
 
   // Populate #shareCard fields
-  const cached = imgUrl ? _imgCache[imgUrl] : null;
   const scImg = document.getElementById('sc-img');
-  if (cached && cached !== 'failed' && cached !== 'loading') {
+  if (cached) {
     await new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
@@ -653,9 +777,17 @@ async function generateShareCard() {
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
+      imageTimeout: 0,
+      onclone: (doc) => {
+        // Ensure cloned images use base64 src so html2canvas can paint them
+        if (cached) {
+          const imgs = doc.querySelectorAll('#sc-img img');
+          imgs.forEach(i => { i.src = cached; });
+        }
+      }
     });
 
-    card.style.left = '-9999px'; // keep hidden
+    card.style.left = '-9999px';
 
     canvas.toBlob(blob => {
       const file = new File([blob], 'sayyar-' + (p.code||'product') + '.jpg', {type:'image/jpeg'});
@@ -666,7 +798,6 @@ async function generateShareCard() {
           text: (p.desc||'') + '\nFinal Price: ' + bd(p.final)
         }).catch(()=>{});
       } else {
-        // Fallback: download
         const a = document.createElement('a');
         a.href = canvas.toDataURL('image/jpeg', 0.92);
         a.download = 'sayyar-' + (p.code||'product') + '.jpg';
